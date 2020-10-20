@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>dsfdsf</title>
+        <script src="jquery-3.3.1.min.js"></script>
+        <style>
+            .some-stuff-to-move .draggable {
+                max-height: 50px; max-width: 50px;
+            }
+            .draggable {
+                z-index: 100;
+                resize: both;
+                overflow: auto;
+            }
+            .selected {
+                /* border: 1px solid yellow; */
+                background-color: yellow;
+                box-sizing: border-box;
+            }
+            .dropped.example2 {
+                height: 70px; 
+                width: 70px;
+            }
+            .dropped.base01 {
+                height: 140px; 
+                width: 100px;
+            }
+            .dropped.eye01 {
+                height: 30px; 
+                width: 30px;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="some-stuff-to-move" style="height: 200px; width: 200px; border: 1px solid #000">
+            <!-- <div draggable="true" class="example1 draggable" style="">
+                ggg
+            </div>
+            <div draggable="true" class="example2 draggable" style="">
+                fff
+            </div> -->
+            <img src="images/base01.png" id="base01" class="draggable" />
+            <img src="images/eye01.png" id="eye01" class="draggable" />
+            <img src="images/mouth01.png" id="mouth01" class="draggable" />
+        </div>
+        <div class="drop-zone" style="height: 200px; width: 200px; border: 1px solid #000; position: relative;">
+
+        </div>
+        <div id="move-forward">Move Forward</div>
+        <div id="move-backward">Move Backward</div>
+        <div id="delete-selected">Delete Selected</div>
+
+        <script>
+            var movableModel = function() {
+                var self = this;
+
+                self.dragStartEvent = null; // the event raised when a drag starts, so we can keep track of where the user clicked on the element
+                self.dragged = null;        // the element being dragged
+
+                self.handleClick = function(event) {
+                    if($(event.target).hasClass("selected")) {
+                        $(event.target).removeClass("selected");
+                    } else {
+                        $(".dropped").removeClass("selected");
+                        $(event.target).addClass("selected");
+                    }
+                };
+                self.handleDragStart = function(event) {
+                    self.dragged = event.target;
+                    self.dragStartEvent = event;
+                };
+                self.handleDrop = function(event) {
+                    event.preventDefault();
+                    // only do if we're looking at the drop zone (i.e. may be dropped on a child node and the event then bubbles up)
+                    if($(event.currentTarget).hasClass("drop-zone")) {
+                        let dropMe = null;
+                        if($(self.dragged).data("droppedType")==="existing") {
+                            // it's not a new object, it's just being repositioned in the drop zone
+                            dropMe = self.dragged;
+                        } else {
+                            dropMe = self.dragged.cloneNode(true);
+                            $(dropMe).on("dragstart", function(event) {
+                                self.handleDragStart(event);
+                            });
+                            $(dropMe).on("click", function(event) {
+                                self.handleClick(event);
+                            });
+                        }
+                        console.log(event)
+                        // if the object is dropped on a child node then the current target and the target are different and we need to 
+                        // include the child's position when working out the new co-ordinates
+                        let x = event.offsetX - self.dragStartEvent.offsetX + (event.currentTarget == event.target ? 0 : event.target.offsetLeft);
+                        let y = event.offsetY - self.dragStartEvent.offsetY + (event.currentTarget == event.target ? 0 : event.target.offsetTop);
+                        $(dropMe).css( { "position" : "absolute", left : x, top: y });
+                        // track that this is now not a new element
+                        $(dropMe).data("droppedType","existing");
+                        $(dropMe).addClass("dropped");
+                        event.currentTarget.appendChild(dropMe);
+                    }
+                };
+                self.handleMoveForwardClick = function() {
+                    if($(".selected").length > 0) {
+                        console.log($(".selected").css("z-index"));
+                        let currentZ = parseInt($(".selected").css("z-index"),10);
+                        $(".selected").css("z-index", currentZ + 10)
+                    }
+                };
+                self.handleMoveBackwardClick = function() {
+                    if($(".selected").length > 0) {
+                        let currentZ = parseInt($(".selected").css("z-index"),10);
+                        $(".selected").css("z-index", currentZ - 10);
+                    }
+                };
+                self.handleDeleteSelectedClick = function() {
+                    $(".selected").remove();
+                };
+                self.initialize = function() {
+                    $(".drop-zone").on("dragover", function(event) {
+                        event.preventDefault();  // for some reason we have to do this to make drag & drop work???
+                    });
+                    $(".drop-zone").on("drop", function(event) {
+                        self.handleDrop(event)
+                    });
+                    $(".draggable").on("dragstart", function(event) {
+                        self.handleDragStart(event);
+                    });
+                    $("#move-forward").on("click", function() {
+                        self.handleMoveForwardClick();
+                    });
+                    $("#move-backward").on("click", function() {
+                        self.handleMoveBackwardClick();
+                    });
+                    $("#delete-selected").on("click", function() {
+                        self.handleDeleteSelectedClick();
+                    });
+                };
+                self.initialize();
+            };
+            movableModel();
+
+            // var dragged = null;
+            // var dragStartEvent = null;
+
+            // $(".drop-zone").on("dragover", function(event) {
+            //     event.preventDefault();
+            // });
+            // $(".drop-zone").on("drop", function(event) {
+            //     event.preventDefault();
+            //     // only do if we're looking at the drop zone (i.e. may be dropped on a child node and the event then bubbles up)
+            //     if($(event.currentTarget).hasClass("drop-zone")) {
+            //         console.log("we in the drop zone");
+            //         let dropMe = null;
+            //         if($(dragged).data("droppedType")==="existing") {
+            //             // it's not a new object, it's just being repositioned in the drop zone
+            //             dropMe = dragged;
+            //         } else {
+            //             dropMe = dragged.cloneNode(true);
+            //             $(dropMe).on("dragstart", function(event) {
+            //                 HandleDragStart(event);
+            //             });
+            //         }
+            //         console.log(event)
+            //         // if the object is dropped on a child node then the current target and the target are different and we need to 
+            //         // include the child's position when working out the new co-ordinates
+            //         let x = event.offsetX - dragStartEvent.offsetX + (event.currentTarget == event.target ? 0 : event.target.offsetLeft);
+            //         let y = event.offsetY - dragStartEvent.offsetY + (event.currentTarget == event.target ? 0 : event.target.offsetTop);
+            //         $(dropMe).css( { "position" : "absolute", left : x, top: y });
+            //         // track that this is now not a new element
+            //         $(dropMe).data("droppedType","existing");
+            //         event.currentTarget.appendChild(dropMe);
+            //     }
+            // });
+            // $(".draggable").on("dragstart", function(event) {
+            //     HandleDragStart(event);
+            // });
+            
+            // function HandleDragStart(event) {
+            //     dragged = event.target;
+            //     dragStartEvent = event;
+            // };
+        </script>
+    </body>
+</html>

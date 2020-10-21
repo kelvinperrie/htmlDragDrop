@@ -4,6 +4,15 @@
         <title>dsfdsf</title>
         <script src="jquery-3.3.1.min.js"></script>
         <style>
+            
+            body {
+                font-family: 'Hind Siliguri', sans-serif !important;
+            }
+            .some-stuff-to-move {
+                width: 400px;
+                height: 110px;
+                border: 1px solid #000
+            }
             .some-stuff-to-move .draggable {
                 max-height: 50px; max-width: 50px;
             }
@@ -12,8 +21,18 @@
                 resize: both;
                 overflow: auto;
             }
+            .drop-zone {
+                height: 400px; 
+                width: 400px; 
+                border: 1px solid #000; 
+                position: relative;
+                display: inline-block;
+            }
+            #command-panel {
+                display: inline-block;
+                vertical-align: bottom;
+            }
             .selected {
-                /* border: 1px solid yellow; */
                 background-color: yellow;
                 box-sizing: border-box;
             }
@@ -21,7 +40,7 @@
                 height: 70px; 
                 width: 70px;
             }
-            .dropped.base01 {
+            /* .dropped.base01 {
                 height: 140px; 
                 width: 100px;
             }
@@ -37,31 +56,56 @@
                 height: 60px; 
                 width: 100px;
             }
+            .dropped.arm03 {
+                height: 145px; 
+                width: 221px;
+            }
+            .dropped.arm04 {
+                height: 203px; 
+                width: 400px;
+            }
+            .dropped.arm05 {
+                height: 165px; 
+                width: 134px;
+            } */
+            .almost-a-button {
+                margin: 2px 5px;
+                border: 1px green solid;
+                border-radius: 10px;
+                padding: 5px;
+                cursor: pointer;
+                font-size: 14px;
+            }
         </style>
     </head>
     <body>
-        <div class="some-stuff-to-move" style="height: 200px; width: 200px; border: 1px solid #000">
-            <!-- <div draggable="true" class="example1 draggable" style="">
-                ggg
-            </div>
-            <div draggable="true" class="example2 draggable" style="">
-                fff
-            </div> -->
+        <div class="some-stuff-to-move">
             <img src="images/base01.png" id="base01" class="draggable" />
+            <img src="images/base02.png" id="base02" class="draggable" />
+            <img src="images/base03.png" id="base03" class="draggable" />
             <img src="images/eye01.png" id="eye01" class="draggable" />
+            <img src="images/eye02.png" id="eye02" class="draggable" />
+            <img src="images/eye03.png" id="eye03" class="draggable" />
             <img src="images/mouth01.png" id="mouth01" class="draggable" />
+            <img src="images/mouth02.png" id="mouth02" class="draggable" />
+            <img src="images/mouth03.png" id="mouth03" class="draggable" />
             <img src="images/arm01.png" id="arm01" class="draggable" />
             <img src="images/arm02.png" id="arm02" class="draggable" />
+            <img src="images/arm03.png" id="arm03" class="draggable" />
+            <img src="images/arm04.png" id="arm04" class="draggable" />
+            <img src="images/arm05.png" id="arm05" class="draggable" />
         </div>
-        <div class="drop-zone" style="height: 200px; width: 200px; border: 1px solid #000; position: relative;">
+        <div class="drop-zone">
 
         </div>
-        <div id="move-forward">Move Forward</div>
-        <div id="move-backward">Move Backward</div>
-        <div id="delete-selected">Delete Selected</div>
-
+        <div id="command-panel">
+            <div class="almost-a-button" id="select-nothing">Select Nothing</div>
+            <div class="almost-a-button" id="move-forward">Move Forward</div>
+            <div class="almost-a-button" id="move-backward">Move Backward</div>
+            <div class="almost-a-button" id="delete-selected">Delete Selected</div>
+        </div>
         <script>
-            var movableModel = function() {
+            var PotatoManEditor = function() {
                 var self = this;
 
                 self.dragStartEvent = null; // the event raised when a drag starts, so we can keep track of where the user clicked on the element
@@ -84,7 +128,8 @@
                     // only do if we're looking at the drop zone (i.e. may be dropped on a child node and the event then bubbles up)
                     if($(event.currentTarget).hasClass("drop-zone")) {
                         let dropMe = null;
-                        if($(self.dragged).data("droppedType")==="existing") {
+                        let isNew = $(self.dragged).data("droppedType")!=="existing";
+                        if(!isNew) {
                             // it's not a new object, it's just being repositioned in the drop zone
                             dropMe = self.dragged;
                         } else {
@@ -103,9 +148,12 @@
                         let y = event.offsetY - self.dragStartEvent.offsetY + (event.currentTarget == event.target ? 0 : event.target.offsetTop);
                         $(dropMe).css( { "position" : "absolute", left : x, top: y });
                         // track that this is now not a new element
-                        $(dropMe).data("droppedType","existing");
-                        $(dropMe).addClass("dropped");
-                        event.currentTarget.appendChild(dropMe);
+                        if(isNew) {
+                            $(dropMe).data("droppedType","existing");
+                            $(dropMe).addClass("dropped");
+                            
+                            event.currentTarget.appendChild(dropMe);
+                        }
                     }
                 };
                 self.handleMoveForwardClick = function() {
@@ -123,6 +171,9 @@
                 };
                 self.handleDeleteSelectedClick = function() {
                     $(".selected").remove();
+                };
+                self.handleSelectNothingClick = function() {
+                    $(".selected").removeClass("selected");
                 };
                 self.initialize = function() {
                     $(".drop-zone").on("dragover", function(event) {
@@ -143,51 +194,14 @@
                     $("#delete-selected").on("click", function() {
                         self.handleDeleteSelectedClick();
                     });
+                    $("#select-nothing").on("click", function() {
+                        self.handleSelectNothingClick();
+                    });
                 };
                 self.initialize();
             };
-            movableModel();
+            PotatoManEditor();
 
-            // var dragged = null;
-            // var dragStartEvent = null;
-
-            // $(".drop-zone").on("dragover", function(event) {
-            //     event.preventDefault();
-            // });
-            // $(".drop-zone").on("drop", function(event) {
-            //     event.preventDefault();
-            //     // only do if we're looking at the drop zone (i.e. may be dropped on a child node and the event then bubbles up)
-            //     if($(event.currentTarget).hasClass("drop-zone")) {
-            //         console.log("we in the drop zone");
-            //         let dropMe = null;
-            //         if($(dragged).data("droppedType")==="existing") {
-            //             // it's not a new object, it's just being repositioned in the drop zone
-            //             dropMe = dragged;
-            //         } else {
-            //             dropMe = dragged.cloneNode(true);
-            //             $(dropMe).on("dragstart", function(event) {
-            //                 HandleDragStart(event);
-            //             });
-            //         }
-            //         console.log(event)
-            //         // if the object is dropped on a child node then the current target and the target are different and we need to 
-            //         // include the child's position when working out the new co-ordinates
-            //         let x = event.offsetX - dragStartEvent.offsetX + (event.currentTarget == event.target ? 0 : event.target.offsetLeft);
-            //         let y = event.offsetY - dragStartEvent.offsetY + (event.currentTarget == event.target ? 0 : event.target.offsetTop);
-            //         $(dropMe).css( { "position" : "absolute", left : x, top: y });
-            //         // track that this is now not a new element
-            //         $(dropMe).data("droppedType","existing");
-            //         event.currentTarget.appendChild(dropMe);
-            //     }
-            // });
-            // $(".draggable").on("dragstart", function(event) {
-            //     HandleDragStart(event);
-            // });
-            
-            // function HandleDragStart(event) {
-            //     dragged = event.target;
-            //     dragStartEvent = event;
-            // };
         </script>
     </body>
 </html>
